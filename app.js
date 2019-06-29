@@ -20,10 +20,7 @@ var connection = mysql.createConnection({
     password: mySQLPassword,
     database: "bamazon_db"
 });
-connection.connect(function (err) {
-    if (err) throw err;
-    console.log("connected as id " + connection.threadId + "\n");
-});
+
 
 function validateInput(value) {
     var integer = Number.isInteger(parseFloat(value));
@@ -39,6 +36,7 @@ function validateInput(value) {
 
 
 /**** Display User Options ****/
+function buySomething(){
 
 inquirer.prompt([{
         type: 'input',
@@ -62,7 +60,9 @@ inquirer.prompt([{
 
     var queryStr = 'SELECT * FROM products WHERE ?';
 
-    connection.query(queryStr, {item_id: item}, function(err, data) {
+    connection.query(queryStr, {
+        item_id: item
+    }, function (err, data) {
         if (err) throw err;
 
         // If the user has selected an invalid item ID, data attay will be empty
@@ -72,15 +72,36 @@ inquirer.prompt([{
             console.log('ERROR: Invalid Item ID. Please select a valid Item ID.');
             displayInventory();
 
+        } else {
+            var product = data[0];
+            // console.log(product);
+
+            console.log("You have selected " + quantity + " " + product.product_name);
+
+            var update = 'UPDATE products SET in_stock = ' + (product.in_stock - quantity) + ' WHERE item_id = ' + item;
+
+            console.log(product.in_stock);
+            //console.log(update);
+
+
+            //connection.end();
+
+            connection.query(update, function (err, data) {
+                if (err) throw err;
+
+                console.log('Your oder has been placed! Your total is $' + product.price * quantity);
+                connection.end();
+            })
+
+
+
         }
 
-        /*** */
     })
-    
 
-
-    /**** */
 });
+
+}
 
 
 function displayInventory() {
@@ -113,19 +134,19 @@ function displayInventory() {
         output = table(proData);
 
         console.log(output);
-
+        buySomething();
     })
+
 }
 
-/*
+
 function runBamazon() {
 
 
-	// Display the available inventory
-	displayInventory();
+    // Display inventory
+    displayInventory();
+    //buySomething();
 }
 
 
 runBamazon();
-
-*/
